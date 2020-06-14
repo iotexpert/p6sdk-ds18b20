@@ -74,7 +74,7 @@ typedef struct
     bool init;                     ///< True if struct has been initialised, otherwise false
     bool solo;                     ///< True if device is intended to be the only one connected to the bus, otherwise false
     bool use_crc;                  ///< True if CRC checks are to be used when retrieving information from a device on the bus
-    const OneWireBus * bus;        ///< Pointer to 1-Wire bus information relevant to this device
+    OneWireBus * bus;        ///< Pointer to 1-Wire bus information relevant to this device
     OneWireBus_ROMCode rom_code;   ///< The ROM code used to address this device on the bus
     DS18B20_RESOLUTION resolution; ///< Temperature measurement resolution per reading
 } DS18B20_Info;
@@ -99,7 +99,7 @@ void ds18b20_free(DS18B20_Info ** ds18b20_info);
  * @param[in] bus Pointer to initialised 1-Wire bus instance.
  * @param[in] rom_code Device-specific ROM code to identify a device on the bus.
  */
-void ds18b20_init(DS18B20_Info * ds18b20_info, const OneWireBus * bus, OneWireBus_ROMCode rom_code);
+void ds18b20_init(DS18B20_Info * ds18b20_info, OneWireBus * bus, OneWireBus_ROMCode rom_code);
 
 /**
  * @brief Initialise a device info instance as a solo device on the bus.
@@ -112,7 +112,7 @@ void ds18b20_init(DS18B20_Info * ds18b20_info, const OneWireBus * bus, OneWireBu
  * @param[in] ds18b20_info Pointer to device info instance.
  * @param[in] bus Pointer to initialised 1-Wire bus instance.
  */
-void ds18b20_init_solo(DS18B20_Info * ds18b20_info, const OneWireBus * bus);
+void ds18b20_init_solo(DS18B20_Info * ds18b20_info, OneWireBus * bus);
 
 /**
  * @brief Enable or disable use of CRC checks on device communications.
@@ -151,7 +151,7 @@ OneWireBus_ROMCode ds18b20_read_rom(DS18B20_Info * ds18b20_info);
  * @brief Start a temperature measurement conversion on a single device.
  * @param[in] ds18b20_info Pointer to device info instance.
  */
-bool ds18b20_convert(const DS18B20_Info * ds18b20_info);
+bool ds18b20_convert(DS18B20_Info * ds18b20_info);
 
 /**
  * @brief Start temperature conversion on all connected devices.
@@ -160,7 +160,7 @@ bool ds18b20_convert(const DS18B20_Info * ds18b20_info);
  * their conversion before the measurements are read.
  * @param[in] bus Pointer to initialised bus instance.
  */
-void ds18b20_convert_all(const OneWireBus * bus);
+void ds18b20_convert_all(OneWireBus * bus);
 
 /**
  * @brief Wait for the maximum conversion time according to the current resolution of the device.
@@ -169,7 +169,7 @@ void ds18b20_convert_all(const OneWireBus * bus);
  * @param[in] ds18b20_info Pointer to device info instance.
  * @return An estimate of the time elapsed, in milliseconds. Actual elapsed time may be greater.
  */
-float ds18b20_wait_for_conversion(const DS18B20_Info * ds18b20_info);
+float ds18b20_wait_for_conversion(DS18B20_Info * ds18b20_info);
 
 /**
  * @brief Read last temperature measurement from device.
@@ -180,7 +180,7 @@ float ds18b20_wait_for_conversion(const DS18B20_Info * ds18b20_info);
  * @param[out] value Pointer to the measurement value returned by the device, in degrees Celsius.
  * @return DS18B20_OK if read is successful, otherwise error.
  */
-DS18B20_ERROR ds18b20_read_temp(const DS18B20_Info * ds18b20_info, float * value);
+DS18B20_ERROR ds18b20_read_temp(DS18B20_Info * ds18b20_info, float * value);
 
 /**
  * @brief Convert, wait and read current temperature from device.
@@ -188,7 +188,7 @@ DS18B20_ERROR ds18b20_read_temp(const DS18B20_Info * ds18b20_info, float * value
  * @param[out] value Pointer to the measurement value returned by the device, in degrees Celsius.
  * @return DS18B20_OK if read is successful, otherwise error.
  */
-DS18B20_ERROR ds18b20_convert_and_read_temp(const DS18B20_Info * ds18b20_info, float * value);
+DS18B20_ERROR ds18b20_convert_and_read_temp(DS18B20_Info * ds18b20_info, float * value);
 
 /**
  * @brief Check OneWire bus for presence of parasitic-powered devices.
@@ -197,7 +197,7 @@ DS18B20_ERROR ds18b20_convert_and_read_temp(const DS18B20_Info * ds18b20_info, f
  * @param[out] present Result value, true if a parasitic-powered device was detected.
  * @return DS18B20_OK if check is successful, otherwise error.
  */
-DS18B20_ERROR ds18b20_check_for_parasite_power(const OneWireBus * bus, bool * present);
+DS18B20_ERROR ds18b20_check_for_parasite_power(OneWireBus * bus, bool * present);
 
 #ifdef __cplusplus
 }

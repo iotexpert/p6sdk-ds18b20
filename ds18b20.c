@@ -49,36 +49,10 @@
 #include "ds18b20.h"
 #include "owb.h"
 
+#include "log.h"
 
-void ESP_LOGD(const char * code, char *val,...)
-{
-
-}
-
-void ESP_LOGE(const char * code, ...)
-{
-
-}
-
-void ESP_LOGW(const char *code,...)
-{
-
-}
-
-#define ESP_LOG_DEBUG 0
-void ESP_LOG_BUFFER_HEX_LEVEL(const char *code,...)
-{
-
-}
-
-uint64_t esp_timer_get_time()
-{
-    return 0;
-}
-
-
-static const char * TAG = "ds18b20";
-static const int T_CONV = 750;   // maximum conversion time at 12-bit resolution in milliseconds
+static  char * TAG = "ds18b20";
+static  int T_CONV = 750;   // maximum conversion time at 12-bit resolution in milliseconds
 
 // Function commands
 #define DS18B20_FUNCTION_TEMP_CONVERT       0x44  ///< Initiate a single temperature conversion
@@ -101,7 +75,7 @@ typedef struct
 /// @endcond ignore
 
 
-static void _init(DS18B20_Info * ds18b20_info, const OneWireBus * bus)
+static void _init(DS18B20_Info * ds18b20_info, OneWireBus * bus)
 {
     if (ds18b20_info != NULL)
     {
@@ -118,7 +92,7 @@ static void _init(DS18B20_Info * ds18b20_info, const OneWireBus * bus)
     }
 }
 
-static bool _is_init(const DS18B20_Info * ds18b20_info)
+static bool _is_init( DS18B20_Info * ds18b20_info)
 {
     bool ok = false;
     if (ds18b20_info != NULL)
@@ -140,7 +114,7 @@ static bool _is_init(const DS18B20_Info * ds18b20_info)
     return ok;
 }
 
-static bool _address_device(const DS18B20_Info * ds18b20_info)
+static bool _address_device( DS18B20_Info * ds18b20_info)
 {
     bool present = false;
     if (_is_init(ds18b20_info))
@@ -159,7 +133,7 @@ static bool _address_device(const DS18B20_Info * ds18b20_info)
                 // if there are multiple devices on the bus, a Match ROM command
                 // must be issued to address a specific slave
                 owb_write_byte(ds18b20_info->bus, OWB_ROM_MATCH);
-                owb_write_rom_code(ds18b20_info->bus, ds18b20_info->rom_code);
+                owb_write_rom_code(ds18b20_info->bus, &ds18b20_info->rom_code);
             }
         }
         else
@@ -193,7 +167,7 @@ static float _wait_for_duration(DS18B20_RESOLUTION resolution)
     return (float)(end_time - start_time) / 1000000.0f;
 }
 
-static float _wait_for_device_signal(const DS18B20_Info * ds18b20_info)
+static float _wait_for_device_signal( DS18B20_Info * ds18b20_info)
 {
     float elapsed_time = 0.0f;
     if (_check_resolution(ds18b20_info->resolution))
@@ -235,7 +209,7 @@ static float _decode_temp(uint8_t lsb, uint8_t msb, DS18B20_RESOLUTION resolutio
     if (_check_resolution(resolution))
     {
         // masks to remove undefined bits from result
-        static const uint8_t lsb_mask[4] = { ~0x07, ~0x03, ~0x01, ~0x00 };
+        static  uint8_t lsb_mask[4] = { ~0x07, ~0x03, ~0x01, ~0x00 };
         uint8_t lsb_masked = lsb_mask[resolution - DS18B20_RESOLUTION_9_BIT] & lsb;
         int16_t raw = (msb << 8) | lsb_masked;
         result = raw / 16.0f;
@@ -252,7 +226,7 @@ static size_t _min(size_t x, size_t y)
     return x > y ? y : x;
 }
 
-static DS18B20_ERROR _read_scratchpad(const DS18B20_Info * ds18b20_info, Scratchpad * scratchpad, size_t count)
+static DS18B20_ERROR _read_scratchpad( DS18B20_Info * ds18b20_info, Scratchpad * scratchpad, size_t count)
 {
     // If CRC is enabled, regardless of count, read the entire scratchpad and verify the CRC,
     // otherwise read up to the scratchpad size, or count, whichever is smaller.
@@ -316,7 +290,7 @@ static DS18B20_ERROR _read_scratchpad(const DS18B20_Info * ds18b20_info, Scratch
     return err;
 }
 
-static bool _write_scratchpad(const DS18B20_Info * ds18b20_info, const Scratchpad * scratchpad, bool verify)
+static bool _write_scratchpad(DS18B20_Info * ds18b20_info,  Scratchpad * scratchpad, bool verify)
 {
     bool result = false;
     // Only bytes 2, 3 and 4 (trigger and configuration) can be written.
@@ -386,7 +360,7 @@ void ds18b20_free(DS18B20_Info ** ds18b20_info)
     }
 }
 
-void ds18b20_init(DS18B20_Info * ds18b20_info, const OneWireBus * bus, OneWireBus_ROMCode rom_code)
+void ds18b20_init(DS18B20_Info * ds18b20_info, OneWireBus * bus, OneWireBus_ROMCode rom_code)
 {
     if (ds18b20_info != NULL)
     {
@@ -402,7 +376,7 @@ void ds18b20_init(DS18B20_Info * ds18b20_info, const OneWireBus * bus, OneWireBu
     }
 }
 
-void ds18b20_init_solo(DS18B20_Info * ds18b20_info, const OneWireBus * bus)
+void ds18b20_init_solo(DS18B20_Info * ds18b20_info,  OneWireBus * bus)
 {
     if (ds18b20_info != NULL)
     {
@@ -491,12 +465,12 @@ DS18B20_RESOLUTION ds18b20_read_resolution(DS18B20_Info * ds18b20_info)
     return resolution;
 }
 
-bool ds18b20_convert(const DS18B20_Info * ds18b20_info)
+bool ds18b20_convert(DS18B20_Info * ds18b20_info)
 {
     bool result = false;
     if (_is_init(ds18b20_info))
     {
-        const OneWireBus * bus = ds18b20_info->bus;
+         OneWireBus * bus = ds18b20_info->bus;
         if (_address_device(ds18b20_info))
         {
             // initiate a temperature measurement
@@ -511,7 +485,7 @@ bool ds18b20_convert(const DS18B20_Info * ds18b20_info)
     return result;
 }
 
-void ds18b20_convert_all(const OneWireBus * bus)
+void ds18b20_convert_all(OneWireBus * bus)
 {
     if (bus)
     {
@@ -527,7 +501,7 @@ void ds18b20_convert_all(const OneWireBus * bus)
     }
 }
 
-float ds18b20_wait_for_conversion(const DS18B20_Info * ds18b20_info)
+float ds18b20_wait_for_conversion( DS18B20_Info * ds18b20_info)
 {
     float elapsed_time = 0.0f;
     if (_is_init(ds18b20_info))
@@ -547,7 +521,7 @@ float ds18b20_wait_for_conversion(const DS18B20_Info * ds18b20_info)
     return elapsed_time;
 }
 
-DS18B20_ERROR ds18b20_read_temp(const DS18B20_Info * ds18b20_info, float * value)
+DS18B20_ERROR ds18b20_read_temp( DS18B20_Info * ds18b20_info, float * value)
 {
     DS18B20_ERROR err = DS18B20_ERROR_UNKNOWN;
     if (_is_init(ds18b20_info))
@@ -572,7 +546,7 @@ DS18B20_ERROR ds18b20_read_temp(const DS18B20_Info * ds18b20_info, float * value
     return err;
 }
 
-DS18B20_ERROR ds18b20_convert_and_read_temp(const DS18B20_Info * ds18b20_info, float * value)
+DS18B20_ERROR ds18b20_convert_and_read_temp( DS18B20_Info * ds18b20_info, float * value)
 {
     DS18B20_ERROR err = DS18B20_ERROR_UNKNOWN;
     if (_is_init(ds18b20_info))
@@ -596,7 +570,7 @@ DS18B20_ERROR ds18b20_convert_and_read_temp(const DS18B20_Info * ds18b20_info, f
     return err;
 }
 
-DS18B20_ERROR ds18b20_check_for_parasite_power(const OneWireBus * bus, bool * present)
+DS18B20_ERROR ds18b20_check_for_parasite_power(OneWireBus * bus, bool * present)
 {
     DS18B20_ERROR err = DS18B20_ERROR_UNKNOWN;
     ESP_LOGD(TAG, "ds18b20_check_for_parasite_power");
